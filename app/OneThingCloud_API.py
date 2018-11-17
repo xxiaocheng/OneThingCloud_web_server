@@ -65,30 +65,25 @@ def random_with_N_digits(n):
     range_end=(10**n)-1
     return randint(range_start,range_end)
 
-nowIp = rip()
 
 
 class OTC(object):
+    now_ip=None
     user_phone_number=None                  #登录账号,手机号
     user_password=None                        #登录密码
-    phone_device_id=str(random_with_N_digits(16))  # 虚拟设备ID 16位
-    imei_id=str(random_with_N_digits(15))    # 虚拟imei 15位
+    phone_device_id=None                    # 虚拟设备ID 16位
+    imei_id=None                            # 虚拟imei 15位
     session_id=None                       # 用户登录有获取的session
     user_id=None                          # 用户登录有获取的user_id
     is_logined=False                    # 当前用户是否登录标识符
-    devices_info=None                      #设备信息{list}
+    # devices_info=None                      #设备信息{list}
     otc_pid = None                     #玩客云设备pid
     otc_device_id = None              #玩客云设备id
-    usb_info=''
+    # usb_info=''
     usb_num=0                                        #硬盘数目
-    download_json=None                      #获取正在进行的任务
+    # download_json=None                      #获取正在进行的任务
 
-    HEADERS = {
-            'user-agent': "Mozilla/5.0",
-            'Proxy-Client-IP' : nowIp,
-            "cache-control": "no-cache"
-        }
-    def __init__(self,user_phone_number,user_password):
+    def __init__(self,user_phone_number=None,**kw):
         ######################
         #  初始化 
         # `user_phone_number`
@@ -96,40 +91,67 @@ class OTC(object):
         # `session_id`
         # `user_id`
         ######################
-        self.user_phone_number=user_phone_number
-        self.user_password=user_password
+        if 'is_logined' in kw:
+            self.user_phone_number=user_phone_number
+            self.user_password=kw['user_password']
+            self.now_ip=kw['now_ip']
+            self.phone_device_id=kw['phone_device_id']
+            self.imei_id=kw['imei_id']
+            self.session_id=kw['session_id']
+            self.user_id=kw['user_id']
+            self.is_logined=kw['is_logined']
+            self.otc_pid=kw['otc_pid']
+            self.otc_device_id=kw['otc_device_id']
+            self.usb_num=kw['usb_num']
+        else:
+            self.user_phone_number=user_phone_number
+            self.user_password=kw['user_password']
+            self.now_ip=rip()
+            self.phone_device_id=str(random_with_N_digits(16))
+            self.imei_id=str(random_with_N_digits(15))
 
-        pwd = get_pwd(self.user_password)
-        body = dict(
-            deviceid = self.phone_device_id, 
-            imeiid = self.imei_id, 
-            phone = self.user_phone_number,    
-            pwd = pwd, 
-            account_type = '4'
-        )
-        sign, _ = get_sign(body)
-        body = dict(
-            deviceid = self.phone_device_id,
-            imeiid = self.imei_id,
-            phone = self.user_phone_number,
-            pwd = pwd,
-            account_type = '4',
-            sign = sign
-        )
-        nowUrl = API_ACCOUNT_URL + '/user/login?appversion={appVersion}'.format(appVersion=APP_VERSION)
-        cookies = None
-        r = requests.post(url = nowUrl, data = body, verify = False, headers = self.HEADERS, cookies = cookies, timeout = 10)
-        if r.ok!=False:
-            self.session_id=r.cookies.get('sessionid')
-            self.user_id = r.cookies.get('userid')
-            self.is_logined=True
-        # 初始化其他设备信息
-        _,_=self.getListPeer()
-        _,_,_=self.getUSBInfo()
+            headers = {
+                'user-agent': "Mozilla/5.0",
+                'Proxy-Client-IP' : self.now_ip,
+                "cache-control": "no-cache"
+            }
+
+            pwd = get_pwd(self.user_password)
+            body = dict(
+                deviceid = self.phone_device_id, 
+                imeiid = self.imei_id, 
+                phone = self.user_phone_number,    
+                pwd = pwd, 
+                account_type = '4'
+            )
+            sign, _ = get_sign(body)
+            body = dict(
+                deviceid = self.phone_device_id,
+                imeiid = self.imei_id,
+                phone = self.user_phone_number,
+                pwd = pwd,
+                account_type = '4',
+                sign = sign
+            )
+            nowUrl = API_ACCOUNT_URL + '/user/login?appversion={appVersion}'.format(appVersion=APP_VERSION)
+            cookies = None
+            r = requests.post(url = nowUrl, data = body, verify = False, headers = headers, cookies = cookies, timeout = 10)
+            if r.ok!=False:
+                self.session_id=r.cookies.get('sessionid')
+                self.user_id = r.cookies.get('userid')
+                self.is_logined=True
+            # 初始化其他设备信息
+            _,_=self.getListPeer()
+            _,_,_=self.getUSBInfo()
         
     def getListPeer(self):
         # 获取设备信息
         try:
+            headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+            }
             body = {
                 "appversion" : APP_VERSION,
                 'ct' : '1',
@@ -138,7 +160,7 @@ class OTC(object):
             sign, _ = get_sign(body,self.session_id)
             url = API_CONTROL_URL + '/listPeer?appversion={appVersion}&ct=1&v=1&sign={sign}'.format(appVersion=APP_VERSION, sign=sign)
             cookies = dict(sessionid=self.session_id, userid=self.user_id)
-            r = requests.get(url=url, headers=self.HEADERS, cookies=cookies, timeout=10)
+            r = requests.get(url=url, headers=headers, cookies=cookies, timeout=10)
             if r.ok == False:
                 return False, r.reason
             tmpJson = r.json()
@@ -146,7 +168,7 @@ class OTC(object):
                 return False, tmpJson['msg']
 
             devices_info = tmpJson['result'][1]['devices']
-            self.devices_info=devices_info  #初始化玩客云设备信息变量 {list}
+            # self.devices_info=devices_info  #初始化玩客云设备信息变量 {list}
             self.otc_pid = devices_info[0]['peerid']                     #玩客云设备pid
             self.otc_device_id = devices_info[0]['device_id'] 
             return True, devices_info
@@ -155,6 +177,13 @@ class OTC(object):
     
     def getUSBInfo(self):
         try:
+            headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            # 'Content-Type': 'text/plain'
+            # 'Content-Type': 'application/json'
+            }
+
             body = {
                 'appversion' : APP_VERSION,
                 'ct' : '1',
@@ -164,14 +193,14 @@ class OTC(object):
             sign, signInput = get_sign(body, self.session_id)
             url = API_CONTROL_URL  + "/getUSBInfo?{signInput}sign={sign}".format(signInput=signInput, sign=sign)
             cookies = dict(sessionid=self.session_id, userid=self.user_id) # , origin='1'
-            r = requests.get(url=url, headers=self.HEADERS, cookies=cookies, timeout=10)
+            r = requests.get(url=url, headers=headers, cookies=cookies, timeout=10)
             if r.ok == False:
                 return False, r.reason
             usb_info = r.json()
             if usb_info['rtn'] != 0:
                 return False, usb_info['msg']
             usb_num=len(usb_info['result'][1]['partitions'])
-            self.usb_info=usb_info
+            # self.usb_info=usb_info
             self.usb_num=usb_num
             return True, usb_info,usb_num
         except Exception as ex:
@@ -180,6 +209,11 @@ class OTC(object):
     def remote_download_login(self):
         # 暂时不知道干什么用
         try:
+            headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+            }
             body = {
                 "pid" : self.otc_pid,
                 'v' : '1',
@@ -188,7 +222,7 @@ class OTC(object):
             sign, nouse = get_sign(body, self.session_id)
             url = API_REMOTE_DOWNLOAD_URL + '/login?' +  nouse + 'sign={sign}'.format(sign=sign)#mypid=mypid,
             cookies = dict(sessionid=self.session_id, userid=self.user_id)
-            r = requests.get(url=url, headers=self.HEADERS, cookies=cookies, timeout=10)
+            r = requests.get(url=url, headers=headers, cookies=cookies, timeout=10)
             if r.ok == False:
                 return False, r.reason
             tmpJson = r.json()
@@ -202,6 +236,11 @@ class OTC(object):
 
     def get_remote_download_info(self,str_type='0'):
         try:
+            headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+            }
             body = {
                 "pid" : self.otc_pid,
                 'v' : '2',
@@ -218,13 +257,13 @@ class OTC(object):
                                                 # strType=strType, 
                                                 sign=sign)
             cookies = dict(sessionid=self.session_id, userid=self.user_id)
-            r = requests.get(url=url, headers=self.HEADERS, cookies=cookies, timeout=10)
+            r = requests.get(url=url, headers=headers, cookies=cookies, timeout=10)
             if r.ok == False:
                 return False, r.reason
             download_json = r.json()
             if download_json['rtn'] != 0:
                 return False, download_json['msg']
-            self.download_json=download_json
+            # self.download_json=download_json
             return True, download_json
     
         except Exception as ex:
@@ -243,7 +282,11 @@ class OTC(object):
         # file_download_path='/media/sda2/onecloud/tddownload' 
         # 
         try:
-
+            headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'Content-Type': 'application/json'
+            }
             temp_list = []
             for job in job_list:        
                 temp_list.append(job)
@@ -257,7 +300,7 @@ class OTC(object):
 
             url = API_REMOTE_DOWNLOAD_URL  + "/createTask?pid={mypid}&v=2&ct=32".format(mypid=self.otc_pid)
             cookies = dict(sessionid=self.session_id, userid=self.user_id) # , origin='1'
-            r = requests.post(url=url, data=body, headers=self.HEADERS, cookies=cookies, timeout=10)
+            r = requests.post(url=url, data=body, headers=headers, cookies=cookies, timeout=10)
             if r.ok == False:
                 return False, r.reason
             tmpJson = r.json()
@@ -284,6 +327,11 @@ class OTC(object):
         else:
             s='restore'
         try:
+            headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+            }
             body = {
                 "pid" : self.otc_pid,
                 'v' : '1',
@@ -297,7 +345,7 @@ class OTC(object):
                                                 # taskid=taskid, 
                                                 sign=sign)
             cookies = dict(sessionid=self.session_id, userid=self.user_id)
-            r = requests.get(url=url, headers=self.HEADERS, cookies=cookies, timeout=10)
+            r = requests.get(url=url, headers=headers, cookies=cookies, timeout=10)
             if r.ok == False:
                 return False, r.reason
             tmpJson = r.json()
@@ -331,13 +379,66 @@ class OTC(object):
             userid=self.user_id,
             origin='1'
         )
+        headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+        }
         url=API_ACCOUNT_URL+'/wkb/'+type+'-history'
         try:
-            r=requests.post(url=url,data=body,headers=self.HEADERS,cookies=cookies,timeout=10)
+            r=requests.post(url=url,data=body,headers=headers,cookies=cookies,timeout=10)
             income_json=r.json()
             return True,income_json
         except Exception as e:
             False,e
+    
+    def draw_wkb(self):
+        pwd = get_pwd(self.user_password)
+        body = dict(
+            deviceid = self.phone_device_id, 
+            imeiid = self.imei_id, 
+            phone = self.user_phone_number,    
+            pwd = pwd, 
+            account_type = '4'
+        )
+        sign, _ = get_sign(body)
+        body=dict(
+            appversion=APP_VERSION,
+            sign=sign
+        )
+        cookies = dict(
+            sessionid=self.session_id,
+            userid=self.user_id,
+            origin='1'
+        )
+        headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+        }
+        url=API_ACCOUNT_URL+'/wkb/draw'
+        try:
+            r=requests.post(url=url,data=body,headers=headers,cookies=cookies,timeout=10)
+            result=r.json()
+            return True,result
+        except Exception as e:
+            False,e
+
+
+def dict2otc(d):
+    return OTC(
+        user_phone_number=d['user_phone_number'],
+        user_password=d['user_password'],
+        now_ip=d['now_ip'],
+        phone_device_id=d['phone_device_id'],
+        imei_id=d['imei_id'],
+        session_id=d['session_id'],
+        user_id=d['user_id'],
+        is_logined=d['is_logined'],
+        otc_pid=d['otc_pid'],
+        otc_device_id=d['otc_device_id'],
+        usb_num=d['usb_num']
+    )
 
 # one_job = {
 # "filesize": 0,
@@ -353,6 +454,35 @@ class OTC(object):
 # q,info=my_otc.get_remote_download_info()
 # print(info)
 
-my_otc=OTC('17746648901','beautiful123')
-_,info=my_otc.get_wkb_history(type='income' ,page=0)
-print(info)
+# OneJob3 = {
+#     "filesize": 0,
+#     "name": '',
+#     "url" : 'magnet:?xt=urn:btih:82d7b47916c57b5288f60da85a2f80cd5894bc22&dn=The.Big.Bang.Theory.S12E09.720p.HDTV.x264-AVS%5Brartv%5D&tr=http%3A%2F%2Ftracker.trackerfix.com%3A80%2Fannounce&tr=udp%3A%2F%2F9.rarbg.me%3A2710&tr=udp%3A%2F%2F9.rarbg.to%3A2710',
+# }
+# OneJob2 = {
+#     "filesize": 0,
+#     "name": '黄石.Yellowstone.2018.S01E08.中英字幕.WEB.720P-人人影视.mp4',
+#     "url" : 'ed2k://|file|%E9%BB%84%E7%9F%B3.Yellowstone.2018.S01E08.%E4%B8%AD%E8%8B%B1%E5%AD%97%E5%B9%95.WEB.720P-%E4%BA%BA%E4%BA%BA%E5%BD%B1%E8%A7%86.mp4|472873520|c273bf00703b45225f2056393d6de87f|h=yq4vc2vndh2fnqdiwnhnqapwh7xcvlrw|/',
+# }
+# job_list=[OneJob3]
+# file_download_path='/media/sda1/onecloud/tddownload' 
+# my_otc=OTC('17746648901','beautiful123')
+# # _,info=my_otc.createTask(job_list,file_download_path)
+# _,info=my_otc.get_wkb_history(type='income')
+# _,info=my_otc.draw_wkb()
+# print(info)
+
+
+j={'user_phone_number': '17746648901',
+ 'user_password': 'beautiful123',
+ 'now_ip': '31.244.241.51',
+ 'phone_device_id': '2911217513822846',
+ 'imei_id': '177925930012490',
+ 'session_id': '9e70d34b151f5a2ccd8026a4636ea559',
+ 'user_id': '2948943',
+ 'is_logined': True,
+ 'otc_pid': 'B0D59DD26A56889X0030',
+ 'otc_device_id': 'mrQenwST9948',
+ 'usb_num': 2}
+
+my_otc=dict2otc(j)
