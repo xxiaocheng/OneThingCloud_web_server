@@ -2,3 +2,13 @@
 
 <title>登录到我的玩客云</title>
 {{ wtf.quick_form(form) }}
+
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+</div>

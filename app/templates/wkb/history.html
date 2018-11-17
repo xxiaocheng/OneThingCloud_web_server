@@ -1,0 +1,47 @@
+<title>我的{{title}}</title>
+
+<h1>{{title}}</h1>
+
+{%if msg%}
+<h3>{{msg}}</h3>
+{%elif total_income%}
+<h4>总收入为:{{total_income}}</h4>
+{% for income in income_array%}
+<ul>
+    <li>{{income['date']}}--{{income['num']}}</li>
+</ul>
+{%endfor%}
+{% if  session['current_otc'] %}
+<li>
+    <a href="{{url_for('auth.logout')}}">登出</a>
+    <a href="{{url_for('wkb.index')}}">我的玩客币</a>
+    <a href="{{url_for('cloud.index')}}">我的云添加</a>
+</li>
+{%else%}
+<li>
+    <a href="{{url_for('auth.login')}}">登录</a>
+</li>
+{%endif%}
+
+
+{%if next_page!=-1%}
+<a href="{{url_for('wkb.history_income')}}?page={{next_page}}">下一页</a>
+{%endif%}
+{%if next_page!=1%}
+<a href="{{url_for('wkb.history_income')}}?page={{up_page}}">上一页</a>
+{%endif%}
+{%else%}
+<h4>一共提现:{{total_outcome}}个</h4>
+{% for outcome in outcome_array%}
+<ul>
+    <li>{{outcome['date']}}--{{outcome['originBalance']}}--to:{{outcome['addr']}}</li>
+</ul>
+{%endfor%}
+{%if next_page!=-1%}
+<a href="{{url_for('wkb.history_outcome')}}?page={{next_page}}">下一页</a>
+{%endif%}
+{%if next_page!=1%}
+<a href="{{url_for('wkb.history_outcome')}}?page={{up_page}}">上一页</a>
+{%endif%}
+{%endif%}
+

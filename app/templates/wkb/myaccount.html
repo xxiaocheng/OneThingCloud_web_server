@@ -1,0 +1,41 @@
+{% if  session['current_otc'] %}
+<li>
+    <a href="{{url_for('auth.logout')}}">登出</a>
+    <a href="{{url_for('wkb.index')}}">我的玩客币</a>
+    <a href="{{url_for('cloud.index')}}">我的云添加</a>
+</li>
+{%else%}
+<li>
+    <a href="{{url_for('auth.login')}}">登录</a>
+</li>
+{%endif%}
+
+
+<title>我的玩客币账户</title>
+
+<!--flash massage-->
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+</div>
+
+    
+{% if msg %}
+<h2>{{msg}}</h2>
+{%else%}
+<div >
+    <h3>当前余额为{{balance}}</h3>
+    <br><h3>账户绑定地址为{{addr_bind}}</h3>
+</div>
+{%endif%}
+
+<li>
+    <a href="{{url_for('wkb.draw_wkb')}}"> 提取玩客币</a>
+    <a href="{{url_for('wkb.history_income')}}">入账记录</a>
+    <a href="{{url_for('wkb.history_outcome')}}">提现记录</a>
+</li>

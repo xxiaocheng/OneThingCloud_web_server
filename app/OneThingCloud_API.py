@@ -269,7 +269,7 @@ class OTC(object):
         except Exception as ex:
             False, ex
 
-    def createTask(self,job_list,file_download_path):
+    def create_task(self,job_list,file_download_path='/media/sda1/onecloud/tddownload'):
         ############################
         # one_job = {
         # "filesize": 0,
@@ -391,6 +391,39 @@ class OTC(object):
             return True,income_json
         except Exception as e:
             False,e
+
+    def get_wkb_account_info(self):
+        # type must in ['income','outcome']
+        pwd = get_pwd(self.user_password)
+        body = dict(
+            deviceid = self.phone_device_id, 
+            imeiid = self.imei_id, 
+            phone = self.user_phone_number,    
+            pwd = pwd, 
+            account_type = '4'
+        )
+        sign, _ = get_sign(body)
+        body=dict(
+            appversion=APP_VERSION,
+            sign=sign
+        )
+        cookies = dict(
+            sessionid=self.session_id,
+            userid=self.user_id,
+            origin='1'
+        )
+        headers = {
+            'user-agent': "Mozilla/5.0",
+            'Proxy-Client-IP' : self.now_ip,
+            'cache-control': "no-cache"
+        }
+        url=API_ACCOUNT_URL+'/wkb/account-info'
+        try:
+            r=requests.post(url=url,data=body,headers=headers,cookies=cookies,timeout=10)
+            wkb_account_info=r.json()
+            return True,wkb_account_info
+        except Exception as e:
+            False,e
     
     def draw_wkb(self):
         pwd = get_pwd(self.user_password)
@@ -440,49 +473,43 @@ def dict2otc(d):
         usb_num=d['usb_num']
     )
 
-# one_job = {
-# "filesize": 0,
-# "name": '100小时的夜晚.mp4',
-# "url" : 'magnet:?xt=urn:btih:7G5ALSYYGODBSBE3ZLREDU2HY2UXXRDA'
-# }
-# job_list=[one_job]
+def main():
+    # one_job = {
+    # "filesize": 0,
+    # "name": '100小时的夜晚.mp4',
+    # "url" : 'magnet:?xt=urn:btih:7G5ALSYYGODBSBE3ZLREDU2HY2UXXRDA'
+    # }
+    # job_list=[one_job]
 
-# file_download_path='/media/sda1/onecloud/tddownload' 
-# my_otc=OTC('17746648901','beautiful123')
-# my_otc.createTask(job_list,file_download_path)
-# _,_=my_otc.remote_download_login()
-# q,info=my_otc.get_remote_download_info()
-# print(info)
+    # file_download_path='/media/sda1/onecloud/tddownload' 
+    # my_otc=OTC('17746648901','beautiful123')
+    # my_otc.createTask(job_list,file_download_path)
+    # _,_=my_otc.remote_download_login()
+    # q,info=my_otc.get_remote_download_info()
+    # print(info)
 
-# OneJob3 = {
-#     "filesize": 0,
-#     "name": '',
-#     "url" : 'magnet:?xt=urn:btih:82d7b47916c57b5288f60da85a2f80cd5894bc22&dn=The.Big.Bang.Theory.S12E09.720p.HDTV.x264-AVS%5Brartv%5D&tr=http%3A%2F%2Ftracker.trackerfix.com%3A80%2Fannounce&tr=udp%3A%2F%2F9.rarbg.me%3A2710&tr=udp%3A%2F%2F9.rarbg.to%3A2710',
-# }
-# OneJob2 = {
-#     "filesize": 0,
-#     "name": '黄石.Yellowstone.2018.S01E08.中英字幕.WEB.720P-人人影视.mp4',
-#     "url" : 'ed2k://|file|%E9%BB%84%E7%9F%B3.Yellowstone.2018.S01E08.%E4%B8%AD%E8%8B%B1%E5%AD%97%E5%B9%95.WEB.720P-%E4%BA%BA%E4%BA%BA%E5%BD%B1%E8%A7%86.mp4|472873520|c273bf00703b45225f2056393d6de87f|h=yq4vc2vndh2fnqdiwnhnqapwh7xcvlrw|/',
-# }
-# job_list=[OneJob3]
-# file_download_path='/media/sda1/onecloud/tddownload' 
-# my_otc=OTC('17746648901','beautiful123')
-# # _,info=my_otc.createTask(job_list,file_download_path)
-# _,info=my_otc.get_wkb_history(type='income')
-# _,info=my_otc.draw_wkb()
-# print(info)
+    
+    # OneJob2 = {
+    #     "filesize": 0,
+    #     "name": '黄石.Yellowstone.2018.S01E08.中英字幕.WEB.720P-人人影视.mp4',
+    #     "url" : 'ed2k://|file|%E9%BB%84%E7%9F%B3.Yellowstone.2018.S01E08.%E4%B8%AD%E8%8B%B1%E5%AD%97%E5%B9%95.WEB.720P-%E4%BA%BA%E4%BA%BA%E5%BD%B1%E8%A7%86.mp4|472873520|c273bf00703b45225f2056393d6de87f|h=yq4vc2vndh2fnqdiwnhnqapwh7xcvlrw|/',
+    # }
+    OneJob3 = {
+        "filesize": 0,
+        "name": '',
+        "url" : 'magnet:?xt=urn:btih:U5GDYHPSEPWHAYWOYKM6VFRNVAWIPFND',
+    }
+    job_list=[OneJob3]
+    file_download_path='/media/sda1/onecloud/tddownload' 
+    my_otc=OTC('17746648901',user_password='beautiful123')
+    _,info=my_otc.control_download_task(task_id='974314807',sign=1)
+    
+    # _,info=my_otc.get_remote_download_info()
+    print(info)
+
+if __name__ == "__main__":
+    main()
 
 
-j={'user_phone_number': '17746648901',
- 'user_password': 'beautiful123',
- 'now_ip': '31.244.241.51',
- 'phone_device_id': '2911217513822846',
- 'imei_id': '177925930012490',
- 'session_id': '9e70d34b151f5a2ccd8026a4636ea559',
- 'user_id': '2948943',
- 'is_logined': True,
- 'otc_pid': 'B0D59DD26A56889X0030',
- 'otc_device_id': 'mrQenwST9948',
- 'usb_num': 2}
 
-my_otc=dict2otc(j)
+

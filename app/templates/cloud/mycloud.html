@@ -1,0 +1,44 @@
+{% import "bootstrap/wtf.html" as wtf %}
+
+<title>我的云添加</title>
+
+
+{% if  session['current_otc'] %}
+<li>
+    <a href="{{url_for('auth.logout')}}">登出</a>
+    <a href="{{url_for('wkb.index')}}">我的玩客币</a>
+    <a href="{{url_for('cloud.index')}}">我的云添加</a>
+</li>
+{%else%}
+<li>
+    <a href="{{url_for('auth.login')}}">登录</a>
+</li>
+{%endif%}
+
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% block page_content %}{% endblock %}
+</div>
+
+{{ wtf.quick_form(form) }}
+
+{%if msg%}
+<h3>获取失败,请重试!</h3>
+{%else%}
+<h3>有{{num}}个下载任务</h3>
+<a href="{{url_for('cloud.index')}}">刷新我的任务</a>
+{%for task in tasks%}
+<ul>
+    <li>
+        名称>>{{task['name']}}
+        文件大小>>{{task['size']}}GB
+        <a href="{{url_for('cloud.control_task')}}?taskId={{task['id']}}&type=0">开始任务</a>
+        <a href="{{url_for('cloud.control_task')}}?taskId={{task['id']}}&type=1">暂停任务</a>
+    </li>
+</ul>
+{%endfor%}
+{%endif%}

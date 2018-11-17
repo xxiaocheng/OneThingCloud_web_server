@@ -4,8 +4,8 @@
 {% if  session['current_otc'] %}
 <li>
     <a href="{{url_for('auth.logout')}}">登出</a>
-    <a href="{{url_for('wkb')}}">我的玩客币</a>
-    <a href="{{url_fot('cloud')}}">我的云添加</a>
+    <a href="{{url_for('wkb.index')}}">我的玩客币</a>
+    <a href="{{url_for('cloud.index')}}">我的云添加</a>
 </li>
 {%else%}
 <li>

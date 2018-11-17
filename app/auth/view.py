@@ -19,12 +19,13 @@ def login():
             otc_json=json.dumps(otc, default=lambda obj: obj.__dict__) # 将otc对象序列化,以存入session
             session['current_otc']=otc_json
             return redirect(url_for('main.index'))
-        # flash('登录失败!')
+        flash('登录失败!')
     return render_template('auth/login.html',form=form)
 
 
 @auth.route('/logout')
 def logout():
     session['current_otc']=None
+    flash('已退出登录!')
     return redirect(url_for('auth.login'))
 
