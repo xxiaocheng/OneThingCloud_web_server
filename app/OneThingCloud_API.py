@@ -473,41 +473,6 @@ def dict2otc(d):
         usb_num=d['usb_num']
     )
 
-def main():
-    # one_job = {
-    # "filesize": 0,
-    # "name": '100小时的夜晚.mp4',
-    # "url" : 'magnet:?xt=urn:btih:7G5ALSYYGODBSBE3ZLREDU2HY2UXXRDA'
-    # }
-    # job_list=[one_job]
-
-    # file_download_path='/media/sda1/onecloud/tddownload' 
-    # my_otc=OTC('17746648901','beautiful123')
-    # my_otc.createTask(job_list,file_download_path)
-    # _,_=my_otc.remote_download_login()
-    # q,info=my_otc.get_remote_download_info()
-    # print(info)
-
-    
-    # OneJob2 = {
-    #     "filesize": 0,
-    #     "name": '黄石.Yellowstone.2018.S01E08.中英字幕.WEB.720P-人人影视.mp4',
-    #     "url" : 'ed2k://|file|%E9%BB%84%E7%9F%B3.Yellowstone.2018.S01E08.%E4%B8%AD%E8%8B%B1%E5%AD%97%E5%B9%95.WEB.720P-%E4%BA%BA%E4%BA%BA%E5%BD%B1%E8%A7%86.mp4|472873520|c273bf00703b45225f2056393d6de87f|h=yq4vc2vndh2fnqdiwnhnqapwh7xcvlrw|/',
-    # }
-    # OneJob3 = {
-    #     "filesize": 0,
-    #     "name": '',
-    #     "url" : 'magnet:?xt=urn:btih:U5GDYHPSEPWHAYWOYKM6VFRNVAWIPFND',
-    # # }
-    # job_list=[OneJob3]
-    file_download_path='/media/sda1/onecloud/tddownload' 
-    my_otc=OTC('17746648901',user_password='beautiful123')
-    
-    _,info=my_otc.get_remote_download_info()
-    print(info)
-
-if __name__ == "__main__":
-    main()
 
 
 
