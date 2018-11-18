@@ -2,8 +2,10 @@ from flask import render_template,url_for,flash,session,redirect,request
 from app.OneThingCloud_API import dict2otc
 from . import wkb
 import json
+from app.decorators import session_check
 
 @wkb.route('/',methods=['GET','POST'])
+@session_check
 def index():
     dict_otc=session.get('current_otc',None)
     my_otc=dict2otc(json.loads(dict_otc))
@@ -19,6 +21,7 @@ def index():
     return render_template('wkb/myaccount.html',msg=msg)
 
 @wkb.route('/draw')
+@session_check
 def draw_wkb():
     # 提现到钱包
     dict_otc=session.get('current_otc',None)
@@ -33,6 +36,7 @@ def draw_wkb():
 
 
 @wkb.route('/history_income',methods=['POST','GET'])
+@session_check
 def history_income():
     # 查询入账记录
     dict_otc=session.get('current_otc',None)
@@ -52,6 +56,7 @@ def history_income():
 
 
 @wkb.route('/history_outcome',methods=['POST','GET'])
+@session_check
 def history_outcome():
     # 查询提现记录
     dict_otc=session.get('current_otc',None)
