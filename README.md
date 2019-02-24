@@ -14,3 +14,5 @@ pip install  -r requirements.txt
 `
 python run.py
 `
+
+### 有问题请开 issues
